@@ -1,0 +1,26 @@
+The files in this directory are the unmodified `dist` output of the npm package
+@drgrice1/tikzjax (minus the unused bakoma/ TTF fonts and the webpack source
+maps), plus this note.
+
+    Upstream:  https://github.com/drgrice1/tikzjax
+    Package:   https://www.npmjs.com/package/@drgrice1/tikzjax
+    Forked from: https://github.com/kisonecat/tikzjax by Jim Fowler
+
+Licensing, as declared by the projects themselves:
+
+  * @drgrice1/tikzjax declares "license": "GPL-3.0+" in its package.json
+    (a copy of which is kept next to this file).  Neither the npm tarball nor
+    the fork's git repository contains a license text file.
+  * The upstream project kisonecat/tikzjax is distributed under the LaTeX
+    Project Public License 1.3c; its license text is kept next to this file as
+    LICENSE.upstream-kisonecat.md.
+
+WebTikZ itself is distributed under the GNU General Public License version 3
+(see ../../LICENSE), which is compatible with the declared license of this
+component.
+
+The bundled TeX system files (tex_files/) are taken from TeX Live.  PGF/TikZ is
+dual licensed under the GNU GPL v2 or later and the LPPL 1.3c; the LaTeX base
+and AMS packages are under the LPPL 1.3c.  The web fonts (fonts/) are derived
+from the BaKoMa Type 1 versions of Donald E. Knuth's Computer Modern typefaces
+and are freely redistributable.
