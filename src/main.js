@@ -552,6 +552,33 @@ function setupToolbar() {
     });
 }
 
+function setupSettingsMenu() {
+    attachMenu(el('btn-settings'), el('menu-settings'));
+
+    el('sel-keymap').value = settings.keymap;
+    editor.setKeymap(settings.keymap);
+    preamble.setKeymap(settings.keymap);
+    el('sel-keymap').addEventListener('change', (event) => {
+        settings.keymap = event.target.value;
+        saveSettings(settings);
+        editor.setKeymap(settings.keymap);
+        preamble.setKeymap(settings.keymap);
+        toast(`Editor keys: ${event.target.selectedOptions[0].textContent}`);
+    });
+
+    el('sel-delay').value = String(settings.autoRenderDelay);
+    el('sel-delay').addEventListener('change', (event) => {
+        settings.autoRenderDelay = Number(event.target.value);
+        saveSettings(settings);
+    });
+
+    el('btn-clear-cache').addEventListener('click', async () => {
+        await renderer.clearCache();
+        toast('Cache cleared — the next render runs TeX again');
+        renderNow({ fresh: true });
+    });
+}
+
 function setupSplitter() {
     const splitter = el('splitter');
     const workspace = el('workspace');
@@ -660,6 +687,7 @@ async function start() {
     setupToolbar();
     setupExport();
     setupFiles();
+    setupSettingsMenu();
     setupSplitter();
     setupShortcuts();
 

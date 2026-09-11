@@ -126,7 +126,23 @@ try {
     if (shotsAt) await page.screenshot(join(shotsAt, 'dark.png'));
     await page.evaluate(`document.getElementById('btn-theme').click()`);
 
-    // 8. Every example, if asked: this is the slow one.
+    // 8. The settings the toolbar offers have to take effect.
+    // Each evaluate shares one global scope, so these stay expressions.
+    await page.evaluate(`(() => {
+        document.getElementById('btn-settings').click();
+        const keys = document.getElementById('sel-keymap');
+        keys.value = 'vim';
+        keys.dispatchEvent(new Event('change'));
+    })()`);
+    const keymap = await page.evaluate(`document.querySelectorAll('.CodeMirror')[0].CodeMirror.getOption('keyMap')`);
+    check('the editor keymap can be changed', keymap === 'vim', String(keymap));
+    await page.evaluate(`(() => {
+        const keys = document.getElementById('sel-keymap');
+        keys.value = 'default';
+        keys.dispatchEvent(new Event('change'));
+    })()`);
+
+    // 9. Every example, if asked: this is the slow one.
     if (wantExamples) {
         const names = await page.evaluate(`(async () => (await import('./src/examples.js')).EXAMPLES.map((e) => e.name))()`);
         for (const name of names) {

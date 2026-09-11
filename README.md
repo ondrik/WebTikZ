@@ -40,6 +40,11 @@ transparent or dark backgrounds, and a light-ink switch for dark ones.
 clipboard, or save a `.tex` file that compiles with a real LaTeX. Exported
 files embed the Computer Modern faces they use, so text survives the trip.
 
+**Settings where you expect them.** The gear menu switches the editor between
+standard, Vim, Emacs and Sublime keys, sets how long after a keystroke the
+picture is recompiled, and clears the picture cache when you want TeX to run
+again from scratch.
+
 **Keep your work.** Drawings are saved in the browser as you type, listed in a
 sidebar, and can be exported as a JSON file. Any drawing can also be put in a
 link: the whole thing travels compressed in the URL fragment, so sharing one
