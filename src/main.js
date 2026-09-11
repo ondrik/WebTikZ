@@ -41,14 +41,14 @@ const editor = createEditor(el('editor'), {
     placeholder: 'Write a tikzpicture here.',
     onChange: () => { current.code = editor.getValue(); touched(); },
     onCursor: (line, column) => { el('status-cursor').textContent = `Line ${line}, column ${column}`; },
-    onRender: () => renderNow({ fresh: false }),
+    onRender: () => renderNow({ manual: true }),
     onSave: () => saveTex(current)
 });
 
 const preamble = createEditor(el('preamble'), {
     placeholder: '\\tikzset{...}, \\newcommand{...}, \\definecolor{...}',
     onChange: () => { current.preamble = preamble.getValue(); touched(); },
-    onRender: () => renderNow({ fresh: false }),
+    onRender: () => renderNow({ manual: true }),
     onSave: () => saveTex(current)
 });
 
@@ -61,7 +61,7 @@ const preview = createPreview({
     zoomLabel: el('btn-zoom-level')
 });
 
-const renderer = createRenderer({ stage: el('stage') });
+const renderer = createRenderer({ workbench: el('workbench') });
 
 // ------------------------------------------------------------------ drawing
 
@@ -158,12 +158,19 @@ function refreshDrawingList() {
 
 // ----------------------------------------------------------------- renderng
 
-async function renderNow({ fresh = false, refit = false } = {}) {
+/**
+ * @param {object} [options]
+ * @param {boolean} [options.fresh]  skip TikZJax's cache, so TeX really runs
+ * @param {boolean} [options.refit]  frame the picture rather than keeping the view
+ * @param {boolean} [options.manual] the user asked for this render, so an error
+ *   may open the log pane; renders that happen on their own may not
+ */
+async function renderNow({ fresh = false, refit = false, manual = false } = {}) {
     clearTimeout(renderTimer);
 
     if (!current.code.trim()) {
         preview.showEmpty('Write a picture, then press Render.');
-        showLog('', { issues: [], errors: [], warnings: [] }, null);
+        showLog('', { issues: [], errors: [], warnings: [] }, null, manual);
         return;
     }
 
@@ -183,7 +190,7 @@ async function renderNow({ fresh = false, refit = false } = {}) {
 
     const parsed = parseTexLog(result.log);
     const issues = parsed.issues.map(describe);
-    showLog(result.log, parsed, result);
+    showLog(result.log, parsed, result, manual);
     markIssues(issues);
 
     if (result.ok && result.svg) {
@@ -252,7 +259,7 @@ function markIssues(issues) {
     });
 }
 
-function showLog(transcript, parsed, result) {
+function showLog(transcript, parsed, result, reveal) {
     el('transcript').textContent = transcript
         || (result?.cached
             ? 'This picture came back from the cache, so TeX did not run.\nRender again from the menu to see the transcript.'
@@ -263,8 +270,10 @@ function showLog(transcript, parsed, result) {
     status.classList.toggle('has-error', parsed.errors.length > 0);
     status.classList.toggle('has-warning', parsed.errors.length === 0 && parsed.warnings.length > 0);
 
-    // An error is worth showing unasked; a warning is not.
-    if (parsed.errors.length) openLogPane();
+    // Opening the log on every error would make it flap open and shut while a
+    // picture is being typed, so it only opens for a render that was asked for.
+    // The badge on the header says an error is there either way.
+    if (reveal && parsed.errors.length) openLogPane();
 }
 
 const openLogPane = () => setLogOpen(true);
@@ -478,13 +487,13 @@ function setupFiles() {
 // -------------------------------------------------------------------- chrome
 
 function setupToolbar() {
-    el('btn-render').addEventListener('click', () => renderNow({ fresh: true }));
+    el('btn-render').addEventListener('click', () => renderNow({ fresh: true, manual: true }));
 
     el('chk-auto').checked = settings.autoRender;
     el('chk-auto').addEventListener('change', (event) => {
         settings.autoRender = event.target.checked;
         saveSettings(settings);
-        if (settings.autoRender) renderNow({ fresh: false });
+        if (settings.autoRender) renderNow({ manual: true });
     });
 
     el('btn-drawings').addEventListener('click', () => setSidebar(el('sidebar').hidden));
@@ -575,7 +584,7 @@ function setupSettingsMenu() {
     el('btn-clear-cache').addEventListener('click', async () => {
         await renderer.clearCache();
         toast('Cache cleared — the next render runs TeX again');
-        renderNow({ fresh: true });
+        renderNow({ fresh: true, manual: true });
     });
 }
 
@@ -634,7 +643,7 @@ function setupShortcuts() {
         switch (event.key) {
             case 'Enter':
                 event.preventDefault();
-                renderNow({ fresh: false });
+                renderNow({ manual: true });
                 break;
             case 's':
                 event.preventDefault();

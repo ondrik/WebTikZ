@@ -246,6 +246,11 @@
     <span id="status-timing"></span>
 </footer>
 
+<!-- TikZJax compiles in here rather than in the canvas: it takes the script
+     tag apart as it works, and the canvas has to keep showing the last good
+     picture while the next one is being compiled or fails to compile. -->
+<div id="workbench" aria-hidden="true"></div>
+
 <input type="file" id="file-input" accept=".tex,.tikz,.txt,text/plain" hidden>
 <input type="file" id="library-input" accept=".json,application/json" hidden>
 

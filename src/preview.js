@@ -86,8 +86,10 @@ export function createPreview({ canvas, sheet, stage, empty, dimensions, zoomLab
      * @param {{keepView?: boolean}} [options] keep zoom and pan across re-renders
      */
     function showPicture(svg, { keepView = true } = {}) {
+        stage.replaceChildren(svg);
         empty.hidden = true;
         empty.replaceChildren();
+        empty.classList.remove('over-picture');
         sheet.classList.remove('empty', 'stale');
 
         size = {
@@ -107,9 +109,10 @@ export function createPreview({ canvas, sheet, stage, empty, dimensions, zoomLab
         else apply();
     }
 
-    /** No picture: either nothing has been rendered yet, or TeX refused. */
+    /** Nothing to show: no picture, no size, no message but this one. */
     function showMessage(node) {
         sheet.classList.add('empty');
+        empty.classList.remove('over-picture');
         size = null;
         dimensions.textContent = '';
         empty.replaceChildren(node);
@@ -142,7 +145,18 @@ export function createPreview({ canvas, sheet, stage, empty, dimensions, zoomLab
         button.addEventListener('click', onOpenLog);
 
         box.append(title, message, button);
-        showMessage(box);
+
+        // While a picture is being edited most errors are half-typed code, and
+        // taking the last good drawing off the screen loses the very thing the
+        // user is looking at.  Keep it, dimmed, with the message above it.
+        if (size) {
+            sheet.classList.add('stale');
+            empty.classList.add('over-picture');
+            empty.replaceChildren(box);
+            empty.hidden = false;
+        } else {
+            showMessage(box);
+        }
     }
 
     const setBusy = (on) => {

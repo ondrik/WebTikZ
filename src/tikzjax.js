@@ -10,6 +10,10 @@
 //   * neither -- the engine never came up, and only a timeout will tell us.
 //
 // The transcript is collected from the console shim installed in index.html.
+//
+// Compilation happens in an off-screen element, not in the canvas: TikZJax
+// rewrites whatever it is given, and the canvas has to go on showing the last
+// good picture until there is a new one.
 
 import { renderAttributes } from './document.js';
 
@@ -20,12 +24,12 @@ const FAILURE_IMAGE = 'invalid.site';
 
 /**
  * @param {object} options
- * @param {HTMLElement} options.stage element the picture is rendered into
+ * @param {HTMLElement} options.workbench off-screen element to compile in
  * @param {number} [options.timeout] give up after this many milliseconds
  * @returns {{render: (drawing: object, opts?: {fresh?: boolean}) => Promise<RenderResult>,
  *            clearCache: () => Promise<void>, busy: () => boolean}}
  */
-export function createRenderer({ stage, timeout = 90000 }) {
+export function createRenderer({ workbench, timeout = 90000 }) {
     let generation = 0;
     let collecting = null;
 
@@ -41,7 +45,7 @@ export function createRenderer({ stage, timeout = 90000 }) {
         const lines = [];
         collecting = lines;
 
-        stage.replaceChildren();
+        workbench.replaceChildren();
 
         const script = document.createElement('script');
         script.type = 'text/tikz';
@@ -51,9 +55,9 @@ export function createRenderer({ stage, timeout = 90000 }) {
         if (fresh) script.dataset.disableCache = 'true';
         script.appendChild(document.createTextNode(drawing.code));
 
-        const settled = watch(stage, script, timeout);
+        const settled = watch(workbench, script, timeout);
         inFlight.add(settled);
-        stage.appendChild(script);
+        workbench.appendChild(script);
 
         let outcome;
         try {
@@ -68,6 +72,10 @@ export function createRenderer({ stage, timeout = 90000 }) {
         if (mine !== generation) return { ok: false, svg: null, log: '', ms: 0, cached: false, reason: 'superseded' };
 
         const log = lines.join('\n');
+        // The picture is handed over rather than shared: the caller moves it
+        // into the canvas, and the next render is free to clear the workbench.
+        outcome.svg?.remove();
+
         return {
             ok: outcome.ok,
             svg: outcome.svg,
@@ -95,11 +103,11 @@ export function createRenderer({ stage, timeout = 90000 }) {
  * Resolve once the inserted script tag has turned into a picture, an error
  * marker, or nothing at all for too long.
  *
- * @param {HTMLElement} stage
+ * @param {HTMLElement} workbench
  * @param {HTMLScriptElement} script
  * @param {number} timeout
  */
-function watch(stage, script, timeout) {
+function watch(workbench, script, timeout) {
     return new Promise((resolve) => {
         let done = false;
 
@@ -108,26 +116,26 @@ function watch(stage, script, timeout) {
             done = true;
             clearTimeout(timer);
             observer.disconnect();
-            stage.removeEventListener('tikzjax-load-finished', onLoaded);
+            workbench.removeEventListener('tikzjax-load-finished', onLoaded);
             resolve(outcome);
         };
 
         const onLoaded = (event) => {
-            const svg = event.target instanceof SVGElement ? event.target : stage.querySelector('svg');
+            const svg = event.target instanceof SVGElement ? event.target : workbench.querySelector('svg');
             finish({ ok: true, svg });
         };
 
-        stage.addEventListener('tikzjax-load-finished', onLoaded);
+        workbench.addEventListener('tikzjax-load-finished', onLoaded);
 
         const observer = new MutationObserver(() => {
-            const marker = stage.querySelector(`img[src*="${FAILURE_IMAGE}"]`);
+            const marker = workbench.querySelector(`img[src*="${FAILURE_IMAGE}"]`);
             if (!marker) return;
             // Take the broken-image icon out; the app shows its own message,
             // and leaving it would keep the browser retrying a dead address.
             marker.remove();
             finish({ ok: false, svg: null, reason: 'tex' });
         });
-        observer.observe(stage, { childList: true, subtree: true });
+        observer.observe(workbench, { childList: true, subtree: true });
 
         // Nothing happened at all: either TeX is stuck on this picture or the
         // engine never started.  Which one it is shows in whether the script
