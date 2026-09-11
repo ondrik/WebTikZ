@@ -472,7 +472,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .checklist label {
     display: block;
-    padding: 3px 6px;
+    /* A wrapped description lines up under the name rather than under the box. */
+    padding: 3px 6px 3px 27px;
+    text-indent: -21px;
     border-radius: var(--radius);
     cursor: pointer;
 }
@@ -790,6 +792,7 @@ dialog::backdrop { background: rgba(12, 16, 22, 0.45); }
 .dlg-body table { border-collapse: collapse; width: 100%; }
 .dlg-body td { padding: 3px 8px 3px 0; vertical-align: top; }
 .dlg-body td:first-child { width: 150px; white-space: nowrap; }
+.dlg-body td strong { font-weight: 600; color: var(--ink); }
 
 .examplelist {
     list-style: none;
@@ -847,7 +850,14 @@ dialog::backdrop { background: rgba(12, 16, 22, 0.45); }
     .workspace { flex-direction: column; }
     .pane-editor { width: auto; height: 45%; border-right: 0; border-bottom: 1px solid var(--line); }
     .splitter { display: none; }
-    .sidebar { position: absolute; z-index: 30; top: var(--toolbar-h); bottom: var(--status-h); }
+    /* The drawings list becomes a drawer over the work, so it needs an edge. */
+    .sidebar {
+        position: absolute;
+        z-index: 30;
+        top: var(--toolbar-h);
+        bottom: var(--status-h);
+        box-shadow: 10px 0 30px rgba(10, 15, 25, 0.22);
+    }
     .toolbar { overflow-x: auto; }
     .setup-grid { grid-template-columns: 1fr; }
 }

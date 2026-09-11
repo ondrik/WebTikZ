@@ -123,6 +123,13 @@ function openDrawing(drawing, { id = null, render = true } = {}) {
     if (render) renderNow({ fresh: false, refit: true });
 }
 
+function setSidebar(open) {
+    el('sidebar').hidden = !open;
+    el('btn-drawings').setAttribute('aria-expanded', String(open));
+}
+
+const closeSidebar = () => setSidebar(false);
+
 function refreshDrawingList() {
     el('count-setup').textContent =
         current.libraries.length + current.packages.length
@@ -132,7 +139,10 @@ function refreshDrawingList() {
     renderDrawingList(el('doclist'), drawings, current.id, {
         onOpen: (id) => {
             const found = drawings.find((d) => d.id === id);
-            if (found) openDrawing(found, { id });
+            if (!found) return;
+            openDrawing(found, { id });
+            // On a narrow screen the list covers the editor it just filled.
+            if (window.matchMedia('(max-width: 900px)').matches) closeSidebar();
         },
         onDelete: (id) => {
             const found = drawings.find((d) => d.id === id);
@@ -477,11 +487,7 @@ function setupToolbar() {
         if (settings.autoRender) renderNow({ fresh: false });
     });
 
-    el('btn-drawings').addEventListener('click', () => {
-        const open = el('sidebar').hidden;
-        el('sidebar').hidden = !open;
-        el('btn-drawings').setAttribute('aria-expanded', String(open));
-    });
+    el('btn-drawings').addEventListener('click', () => setSidebar(el('sidebar').hidden));
 
     el('btn-new-doc').addEventListener('click', () => {
         openDrawing(makeDrawing({ name: `Drawing ${drawings.length + 1}`, code: STARTER_CODE }), { id: null });

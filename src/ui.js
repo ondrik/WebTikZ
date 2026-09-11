@@ -278,14 +278,14 @@ export function helpContent() {
         ['Drag, or scroll', 'Move around the canvas'],
         ['Ctrl / Cmd + scroll', 'Zoom the canvas'],
         ['F1', 'This window']
-    ]));
+    ], { keys: true }));
 
     wrap.appendChild(section('What the engine can do', [
         ['Libraries', 'Every TikZ library is available, but you have to tick it under Libraries.'],
         ['Packages', 'amsmath, pgfplots, tikz-cd, tikz-3dplot, array, xparse and a few more.'],
         ['Fonts', 'Computer Modern only, and text is set by TeX itself.'],
         ['Not available', '\\includegraphics, external files, shell-escape, LuaTeX-only features.']
-    ]));
+    ], { keys: false }));
 
     const cache = document.createElement('p');
     cache.textContent =
@@ -296,7 +296,13 @@ export function helpContent() {
     return wrap;
 }
 
-function section(heading, rows) {
+/**
+ * @param {string} heading
+ * @param {Array<[string, string]>} rows
+ * @param {{keys: boolean}} options whether the left column holds keystrokes;
+ *   a keycap around a word that is not a key just misleads
+ */
+function section(heading, rows, { keys }) {
     const wrap = document.createElement('section');
     const title = document.createElement('h3');
     title.textContent = heading;
@@ -305,9 +311,9 @@ function section(heading, rows) {
     for (const [left, right] of rows) {
         const tr = document.createElement('tr');
         const td1 = document.createElement('td');
-        const key = document.createElement('kbd');
-        key.textContent = left;
-        td1.appendChild(key);
+        const label = document.createElement(keys ? 'kbd' : 'strong');
+        label.textContent = left;
+        td1.appendChild(label);
         const td2 = document.createElement('td');
         td2.textContent = right;
         tr.append(td1, td2);
