@@ -1,0 +1,13 @@
+# Editor / OS cruft
+*~
+.*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Vendoring scratch space (tools/fetch-vendor.sh works here)
+.vendor-tmp/
+
+# Nothing is built; there is no node_modules in a deployed checkout, but keep
+# it ignored in case someone runs npm in the tree while re-vendoring.
+node_modules/

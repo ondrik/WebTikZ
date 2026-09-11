@@ -1,0 +1,36 @@
+WebTikZ
+Copyright (C) 2026 Ondra Lengal and contributors
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.  See the file LICENSE for the full text.
+
+================================================================================
+Third-party components distributed with WebTikZ
+================================================================================
+
+vendor/tikzjax/
+    TikZJax -- TeX/TikZ compiled to WebAssembly.
+    Upstream: https://github.com/drgrice1/tikzjax (npm package @drgrice1/tikzjax),
+    a fork of https://github.com/kisonecat/tikzjax by Jim Fowler, maintained by
+    Glenn Rice for WeBWorK.
+    Built on kisonecat/web2js, jhoobergs/web2js, drgrice1/web2js and
+    drgrice1/dvi2html.
+    License: the package metadata declares GPL-3.0 or later; the project it
+    forks (kisonecat/tikzjax) is distributed under the LPPL 1.3c.  Neither
+    repository ships a license text file, so both facts are recorded in
+    vendor/tikzjax/LICENSE.txt together with the upstream license text.
+
+    The bundled TeX system files (vendor/tikzjax/tex_files/) come from TeX Live
+    and are covered by their own licenses: PGF/TikZ is dual licensed under the
+    GNU GPL v2+ and the LaTeX Project Public License 1.3c; the LaTeX base and
+    AMS packages are under the LPPL 1.3c.  The Computer Modern web fonts
+    (vendor/tikzjax/fonts/, derived from the BaKoMa fonts) originate from the
+    Computer Modern typefaces by Donald E. Knuth and are freely redistributable.
+
+vendor/codemirror/
+    CodeMirror 5 -- in-browser code editor.
+    Upstream: https://codemirror.net/5/ (https://github.com/codemirror/codemirror5)
+    Copyright (C) by Marijn Haverbeke and others.
+    License: MIT.  See vendor/codemirror/LICENSE.
