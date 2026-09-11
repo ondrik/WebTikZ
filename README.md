@@ -4,6 +4,8 @@ A TikZ editor that runs entirely in your browser — a web counterpart to
 [QTikZ](https://github.com/fhackenberger/ktikz). Write TikZ on the left, watch
 the picture appear on the right.
 
+**<https://ondrik.github.io/WebTikZ/>**
+
 There is no server, no account, and no build step. TeX itself runs in the page:
 the engine is [TikZJax](https://github.com/drgrice1/tikzjax), a real TeX
 compiled to WebAssembly with PGF/TikZ preloaded, running in a Web Worker. Your
@@ -69,6 +71,13 @@ For deployment, copy the whole directory to any static host — GitHub Pages,
 Netlify, a university web space. It is ordinary files; `https` or `localhost` is
 the only requirement. The first visit downloads about 7 MB of engine (the TeX
 core dump and the fonts), which the browser then caches.
+
+This copy is published straight from `master` (Pages source: branch `master`,
+folder `/`), so a push deploys it. The one thing a host has to get right is
+serving `vendor/tikzjax/*.gz` as files rather than as gzip *transfer* encoding;
+GitHub Pages does, sending them as `application/gzip` with no
+`Content-Encoding`. A host that sets that header instead will break the engine,
+because the worker unpacks those files itself.
 
 ## What TikZJax can and cannot do
 

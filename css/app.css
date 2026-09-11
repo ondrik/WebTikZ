@@ -217,6 +217,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
     font-size: var(--sz-small);
 }
 
+/* A checkbox belongs next to its words, not at the other end of the row. */
+.menu-field:has(input[type="checkbox"]) { justify-content: flex-start; gap: 9px; }
+
 .menu-field select {
     border: 1px solid var(--line-strong);
     background: var(--surface);
@@ -647,7 +650,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .zoomgroup { display: flex; gap: 3px; }
 .btn-zoom { min-width: 52px; font-variant-numeric: tabular-nums; }
-.dimensions { font-variant-numeric: tabular-nums; }
+.dimensions {
+    font-variant-numeric: tabular-nums;
+    /* Wrapping here would make the whole bar taller as the pane narrows. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
 .canvasbar-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 
 .canvasbar select {
