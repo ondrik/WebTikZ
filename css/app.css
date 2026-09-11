@@ -74,6 +74,10 @@
 
 * { box-sizing: border-box; }
 
+/* Several rules below set `display`, which would otherwise win against the
+ * hidden attribute's user-agent style and show things meant to be gone. */
+[hidden] { display: none !important; }
+
 html, body {
     height: 100%;
     margin: 0;
@@ -386,10 +390,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border: 0;
     border-left: 1px solid var(--line);
     background: none;
-    padding: 0 10px;
+    padding: 0 12px;
     color: var(--ink-soft);
+    text-align: right;
     text-overflow: ellipsis;
 }
+
+.doc-title:hover { background: var(--surface); }
 
 .doc-title:focus { background: var(--surface); color: var(--ink); outline-offset: -2px; }
 

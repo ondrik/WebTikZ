@@ -1,0 +1,17 @@
+{
+    "name": "webtikz",
+    "version": "0.1.0",
+    "private": true,
+    "description": "A TikZ editor that runs entirely in the browser, with TikZJax as the rendering engine.",
+    "license": "GPL-3.0-or-later",
+    "type": "module",
+    "engines": { "node": ">=22" },
+    "scripts": {
+        "serve": "python3 -m http.server 8000 --bind 127.0.0.1",
+        "test": "node --test tests/*.test.js",
+        "smoke": "node tools/smoke.mjs",
+        "smoke:all": "node tools/smoke.mjs --examples",
+        "catalog": "node tools/gen-catalog.mjs",
+        "vendor": "./tools/fetch-vendor.sh"
+    }
+}

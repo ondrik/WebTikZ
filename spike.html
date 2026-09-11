@@ -1,0 +1,34 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>spike</title>
+<link rel="stylesheet" href="vendor/tikzjax/fonts.css">
+<script>
+  window.__log = [];
+  const realLog = console.log.bind(console);
+  console.log = (...a) => { window.__log.push(a.map(String).join(' ')); realLog(...a); };
+</script>
+<script src="vendor/tikzjax/tikzjax.js"></script>
+<body>
+<div id="stage"></div>
+<script>
+window.__render = function (code, data) {
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  window.__log = [];
+  window.__done = null;
+  const s = document.createElement('script');
+  s.type = 'text/tikz';
+  s.dataset.showConsole = 'true';
+  s.dataset.disableCache = 'true';
+  Object.assign(s.dataset, data || {});
+  s.appendChild(document.createTextNode(code));
+  stage.addEventListener('tikzjax-load-finished', (e) => { window.__done = 'svg'; }, { once: true });
+  new MutationObserver((muts, obs) => {
+    for (const m of muts) for (const n of m.addedNodes) {
+      if (n.tagName === 'IMG') { window.__done = 'error'; obs.disconnect(); }
+    }
+  }).observe(stage, { childList: true, subtree: true });
+  stage.appendChild(s);
+};
+window.__state = () => ({ done: window.__done, html: document.getElementById('stage').innerHTML.slice(0, 300), log: window.__log.join('\n') });
+</script>

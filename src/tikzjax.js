@@ -120,9 +120,12 @@ function watch(stage, script, timeout) {
         stage.addEventListener('tikzjax-load-finished', onLoaded);
 
         const observer = new MutationObserver(() => {
-            if (stage.querySelector(`img[src*="${FAILURE_IMAGE}"]`)) {
-                finish({ ok: false, svg: null, reason: 'tex' });
-            }
+            const marker = stage.querySelector(`img[src*="${FAILURE_IMAGE}"]`);
+            if (!marker) return;
+            // Take the broken-image icon out; the app shows its own message,
+            // and leaving it would keep the browser retrying a dead address.
+            marker.remove();
+            finish({ ok: false, svg: null, reason: 'tex' });
         });
         observer.observe(stage, { childList: true, subtree: true });
 
