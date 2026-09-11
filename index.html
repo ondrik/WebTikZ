@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebTikZ — a TikZ editor in the browser</title>
+<meta name="description" content="Write TikZ, see the picture. A qtikz-like editor that compiles TeX in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231f2937'/%3E%3Cg fill='none' stroke='%23e8ecf1' stroke-width='2'%3E%3Ccircle cx='9' cy='22' r='3.5'/%3E%3Ccircle cx='23' cy='10' r='3.5'/%3E%3Cpath d='M11.6 19.6 20.4 12.4'/%3E%3C/g%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="vendor/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="vendor/codemirror/addon/dialog/dialog.css">
+<link rel="stylesheet" href="vendor/codemirror/addon/hint/show-hint.css">
+<link rel="stylesheet" href="vendor/codemirror/addon/fold/foldgutter.css">
+<!-- Computer Modern web fonts.  TikZJax needs these to draw text inside
+     pictures; WebTikZ also uses cmr10 for its own wordmark. -->
+<link rel="stylesheet" href="vendor/tikzjax/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+
+<script>
+// TikZJax reports the TeX transcript by calling console.log from its worker
+// thread, and that is the only channel it offers.  Patch console.log before
+// tikzjax.js loads so the log pane can show what TeX said; see src/tikzjax.js,
+// which installs the sink.
+(function () {
+    const original = console.log.bind(console);
+    window.__tikzConsoleSink = null;
+    console.log = function (...args) {
+        if (window.__tikzConsoleSink) {
+            try { window.__tikzConsoleSink(args.map((a) => (typeof a === 'string' ? a : String(a))).join(' ')); }
+            catch { /* never let logging break rendering */ }
+        }
+        original(...args);
+    };
+}());
+</script>
+<script src="vendor/tikzjax/tikzjax.js"></script>
+
+<script src="vendor/codemirror/lib/codemirror.js"></script>
+<script src="vendor/codemirror/mode/stex/stex.js"></script>
+<script src="vendor/codemirror/addon/edit/matchbrackets.js"></script>
+<script src="vendor/codemirror/addon/edit/closebrackets.js"></script>
+<script src="vendor/codemirror/addon/edit/trailingspace.js"></script>
+<script src="vendor/codemirror/addon/selection/active-line.js"></script>
+<script src="vendor/codemirror/addon/display/placeholder.js"></script>
+<script src="vendor/codemirror/addon/comment/comment.js"></script>
+<script src="vendor/codemirror/addon/dialog/dialog.js"></script>
+<script src="vendor/codemirror/addon/search/searchcursor.js"></script>
+<script src="vendor/codemirror/addon/search/search.js"></script>
+<script src="vendor/codemirror/addon/search/jump-to-line.js"></script>
+<script src="vendor/codemirror/addon/hint/show-hint.js"></script>
+<script src="vendor/codemirror/addon/fold/foldcode.js"></script>
+<script src="vendor/codemirror/addon/fold/foldgutter.js"></script>
+<script src="vendor/codemirror/addon/fold/brace-fold.js"></script>
+<script src="vendor/codemirror/keymap/vim.js"></script>
+<script src="vendor/codemirror/keymap/emacs.js"></script>
+<script src="vendor/codemirror/keymap/sublime.js"></script>
+
+<script type="module" src="src/main.js"></script>
+</head>
+
+<body>
+<div id="insecure-banner" class="banner" hidden></div>
+
+<header class="toolbar">
+    <h1 class="brand">WebTikZ</h1>
+
+    <div class="toolgroup">
+        <button type="button" id="btn-render" class="btn btn-primary" title="Render the picture (Ctrl+Enter)">
+            Render
+        </button>
+        <label class="toggle" title="Render again a moment after you stop typing">
+            <input type="checkbox" id="chk-auto" checked> Auto
+        </label>
+    </div>
+
+    <div class="toolgroup">
+        <button type="button" id="btn-drawings" class="btn" aria-expanded="false">Drawings</button>
+        <button type="button" id="btn-examples" class="btn">Examples</button>
+        <button type="button" id="btn-open" class="btn" title="Open a .tex file">Open</button>
+        <div class="menu-wrap">
+            <button type="button" id="btn-export" class="btn" aria-haspopup="true" aria-expanded="false">Export</button>
+            <div class="menu" id="menu-export" hidden role="menu">
+                <button type="button" role="menuitem" data-export="svg">Save SVG</button>
+                <button type="button" role="menuitem" data-export="png">Save PNG</button>
+                <button type="button" role="menuitem" data-export="tex">Save TeX source</button>
+                <hr>
+                <button type="button" role="menuitem" data-export="copy-png">Copy picture</button>
+                <button type="button" role="menuitem" data-export="copy-svg">Copy SVG markup</button>
+                <button type="button" role="menuitem" data-export="copy-link">Copy link to this drawing</button>
+                <hr>
+                <label class="menu-field">
+                    Picture size
+                    <select id="sel-png-scale">
+                        <option value="1">1×</option>
+                        <option value="2" selected>2×</option>
+                        <option value="4">4×</option>
+                    </select>
+                </label>
+                <label class="menu-field">
+                    <input type="checkbox" id="chk-png-opaque" checked> White background in PNG
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="toolgroup toolgroup-end">
+        <button type="button" id="btn-theme" class="btn btn-icon" title="Switch between light and dark">
+            <span id="theme-icon">◐</span>
+        </button>
+        <button type="button" id="btn-help" class="btn btn-icon" title="Keyboard shortcuts and help">?</button>
+    </div>
+</header>
+
+<main class="workspace" id="workspace">
+    <aside class="sidebar" id="sidebar" hidden aria-label="Saved drawings">
+        <div class="sidebar-head">
+            <span>Drawings</span>
+            <button type="button" id="btn-new-doc" class="btn btn-small">New</button>
+        </div>
+        <ul class="doclist" id="doclist"></ul>
+        <div class="sidebar-foot">
+            <button type="button" id="btn-import-library" class="btn btn-small">Import…</button>
+            <button type="button" id="btn-export-library" class="btn btn-small">Export all</button>
+        </div>
+    </aside>
+
+    <section class="pane pane-editor" id="pane-editor">
+        <nav class="tabs" role="tablist">
+            <button type="button" class="tab" role="tab" data-tab="code" aria-selected="true">Picture</button>
+            <button type="button" class="tab" role="tab" data-tab="preamble" aria-selected="false">
+                Preamble <span class="dot" id="dot-preamble" hidden></span>
+            </button>
+            <button type="button" class="tab" role="tab" data-tab="setup" aria-selected="false">
+                Libraries <span class="count" id="count-setup"></span>
+            </button>
+            <input type="text" id="doc-title" class="doc-title" aria-label="Drawing name" spellcheck="false">
+        </nav>
+
+        <div class="tabpanel" id="panel-code" role="tabpanel">
+            <textarea id="editor"></textarea>
+        </div>
+
+        <div class="tabpanel" id="panel-preamble" role="tabpanel" hidden>
+            <p class="panel-note">
+                Lines added before <code>\begin{document}</code> — macro definitions,
+                <code>\tikzset</code>, colours. TikZJax always loads TikZ itself.
+            </p>
+            <textarea id="preamble"></textarea>
+        </div>
+
+        <div class="tabpanel panel-setup" id="panel-setup" role="tabpanel" hidden>
+            <p class="panel-note">
+                TikZ libraries and TeX packages have to be requested here so the engine
+                can fetch them. Everything listed is available offline.
+            </p>
+            <div class="setup-search">
+                <input type="search" id="setup-filter" placeholder="Filter libraries and packages" aria-label="Filter">
+            </div>
+            <div class="setup-grid">
+                <section>
+                    <h2>TikZ libraries</h2>
+                    <div class="checklist" id="list-libraries"></div>
+                </section>
+                <section>
+                    <h2>TeX packages</h2>
+                    <div class="checklist" id="list-packages"></div>
+                </section>
+            </div>
+        </div>
+    </section>
+
+    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0"
+         aria-label="Resize editor and preview"></div>
+
+    <section class="pane pane-preview" id="pane-preview">
+        <div class="canvas" id="canvas" data-background="paper">
+            <div class="sheet" id="sheet">
+                <div id="stage"></div>
+            </div>
+            <div class="canvas-empty" id="canvas-empty">Write a picture, then press Render.</div>
+        </div>
+
+        <div class="canvasbar">
+            <div class="zoomgroup">
+                <button type="button" class="btn btn-small" id="btn-zoom-out" title="Zoom out (Ctrl+-)">−</button>
+                <button type="button" class="btn btn-small btn-zoom" id="btn-zoom-level" title="Reset to 100% (Ctrl+0)">100%</button>
+                <button type="button" class="btn btn-small" id="btn-zoom-in" title="Zoom in (Ctrl++)">+</button>
+                <button type="button" class="btn btn-small" id="btn-zoom-fit" title="Fit the picture in the canvas">Fit</button>
+            </div>
+            <span class="dimensions" id="dimensions"></span>
+            <div class="canvasbar-end">
+                <label class="toggle"><input type="checkbox" id="chk-grid" checked> 1 cm grid</label>
+                <label class="toggle" id="lbl-invert" hidden><input type="checkbox" id="chk-invert"> Light ink</label>
+                <select id="sel-background" aria-label="Canvas background">
+                    <option value="paper">Paper</option>
+                    <option value="checker">Transparent</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="logpane" id="logpane">
+            <button type="button" class="log-head" id="btn-log" aria-expanded="false">
+                <span class="log-caret">▸</span>
+                <span>TeX output</span>
+                <span class="log-status" id="log-status"></span>
+            </button>
+            <div class="log-body" id="log-body" hidden>
+                <ul class="issues" id="issues"></ul>
+                <pre class="transcript" id="transcript"></pre>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="statusbar">
+    <span id="status-state">Starting the TeX engine…</span>
+    <span class="status-sep"></span>
+    <span id="status-cursor"></span>
+    <span id="status-timing"></span>
+</footer>
+
+<input type="file" id="file-input" accept=".tex,.tikz,.txt,text/plain" hidden>
+<input type="file" id="library-input" accept=".json,application/json" hidden>
+
+<dialog id="dlg-examples">
+    <form method="dialog" class="dlg-head">
+        <h2>Examples</h2>
+        <button class="btn btn-small" value="cancel">Close</button>
+    </form>
+    <p class="dlg-note">Opening an example puts it in a new drawing, with the libraries it needs.</p>
+    <ul class="examplelist" id="examplelist"></ul>
+</dialog>
+
+<dialog id="dlg-help">
+    <form method="dialog" class="dlg-head">
+        <h2>WebTikZ</h2>
+        <button class="btn btn-small" value="cancel">Close</button>
+    </form>
+    <div class="dlg-body" id="help-body"></div>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+</body>
+</html>

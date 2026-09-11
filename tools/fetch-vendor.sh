@@ -143,6 +143,9 @@ printf '%s\n' "$CODEMIRROR_VERSION" > "${CM_DST}/VERSION"
 
 rm -rf "$TMP"
 
+# The library and package pickers are generated from what was just vendored.
+node "${ROOT}/tools/gen-catalog.mjs"
+
 echo
 echo "Vendored into ${ROOT}/vendor:"
 du -sh "${ROOT}/vendor"/* 
