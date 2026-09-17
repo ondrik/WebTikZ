@@ -211,6 +211,18 @@ export const EXAMPLES = [
 \\end{tikzpicture}`
     },
     {
+        id: 'quantikz',
+        name: 'Quantum circuit',
+        uses: 'quantikz',
+        libraries: [],
+        packages: ['quantikz'],
+        preamble: '',
+        code: `\\begin{quantikz}
+  \\lstick{$\\ket{0}$} & \\gate{H} & \\ctrl{1} & \\qw      & \\meter{} \\\\
+  \\lstick{$\\ket{0}$} & \\qw      & \\targ{}  & \\gate{Z} & \\meter{}
+\\end{quantikz}`
+    },
+    {
         id: 'threed',
         name: 'Three dimensions',
         uses: 'tikz-3dplot',

@@ -22,6 +22,13 @@ vendor/tikzjax/
     repository ships a license text file, so both facts are recorded in
     vendor/tikzjax/LICENSE.txt together with the upstream license text.
 
+    Beyond the upstream distribution, vendor/tikzjax/tex_files/ also carries the
+    files listed in tools/extra-tex-files.txt, installed from TeX Live by
+    tools/add-tex-files.sh so that quantikz can be used.  quantikz is by
+    Alastair Kay and is published under CC-BY-4.0; the supporting packages
+    (mathtools, mhsetup, xkeyval, calc, xstring, xargs, environ, trimspaces)
+    are distributed under the LaTeX Project Public License.
+
     The bundled TeX system files (vendor/tikzjax/tex_files/) come from TeX Live
     and are covered by their own licenses: PGF/TikZ is dual licensed under the
     GNU GPL v2+ and the LaTeX Project Public License 1.3c; the LaTeX base and

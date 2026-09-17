@@ -1,0 +1,23 @@
+# TeX files added to vendor/tikzjax/tex_files beyond what @drgrice1/tikzjax
+# ships, one filename per line.  tools/add-tex-files.sh installs them from the
+# local TeX distribution; they are committed, so this only has to run when the
+# list changes.
+#
+# quantikz -- quantum circuit diagrams.
+quantikz.sty
+tikzlibraryquantikz.code.tex
+tikzlibraryquantikz2.code.tex
+
+# ...and what quantikz loads that the engine did not already have.
+xargs.sty
+xstring.sty
+xstring.tex
+mathtools.sty
+mhsetup.sty
+environ.sty
+trimspaces.sty
+xkeyval.sty
+xkeyval.tex
+xkvutils.tex
+calc.sty
+keyval.tex

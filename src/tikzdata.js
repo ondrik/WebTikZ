@@ -62,6 +62,8 @@ export const LIBRARY_NOTES = {
     plothandlers: 'Extra ways to join plotted points (loaded by default)',
     plotmarks: 'Marks for plotted points: +, x, o, stars',
     positioning: 'Place nodes relative to others: right=2cm of a',
+    quantikz: 'Quantum circuits: wires, gates, measurements (the current syntax)',
+    quantikz2: 'Quantum circuits, quantikz version 2 (what \\usepackage{quantikz} loads)',
     quotes: 'Label edges and angles with "quoted" text',
     rdf: 'Attach RDF metadata to a picture',
     scopes: 'Shorthand braces for scopes',
@@ -97,13 +99,17 @@ export const PACKAGE_NOTES = {
     amssymb: 'The AMS symbol fonts',
     amstext: '\\text inside maths',
     array: 'Better column specifications in tabular and matrix',
+    calc: 'Arithmetic on lengths and counters',
     etoolbox: 'Tools for defining and patching macros',
     'hf-tikz': 'Highlight parts of a formula',
     ifthen: 'Conditionals: \\ifthenelse',
+    mathtools: 'Extends amsmath: \\mathclap, better matrices, paired delimiters',
     pgfplots: 'Plot functions and data: axis, \\addplot',
     'tikz-3dplot': 'Three-dimensional coordinate systems and views',
+    quantikz: 'Quantum circuit diagrams: \\begin{quantikz}, \\gate, \\ctrl, \\meter',
     'tikz-cd': 'Commutative diagrams with arrows between cells',
-    xparse: 'Define commands with rich argument specifications'
+    xparse: 'Define commands with rich argument specifications',
+    xstring: 'Test and manipulate strings'
 };
 
 /**

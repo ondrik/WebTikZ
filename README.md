@@ -25,10 +25,15 @@ picture is recompiled a moment after you stop typing, or on
 <kbd>Ctrl</kbd>+<kbd>Enter</kbd>.
 
 **Preamble and libraries, like QTikZ's templates.** A separate preamble tab for
-`\tikzset`, macros and colours, and a picker for the 80 TikZ libraries and 14
+`\tikzset`, macros and colours, and a picker for the 82 TikZ libraries and 18
 TeX packages the engine can load. The picker is generated from the vendored TeX
 files, so anything it offers will compile — `arrows.meta`, `automata`,
-`decorations.*`, `pgfplots`, `tikz-cd`, `tikz-3dplot` and the rest.
+`decorations.*`, `pgfplots`, `tikz-cd`, `tikz-3dplot`, `quantikz` and the rest.
+
+**Quantum circuits.** `quantikz` is included, which the upstream engine does not
+ship: tick it under Libraries and `\begin{quantikz}` works, gates, controls,
+targets, meters and all. Adding another package is the same exercise — put its
+files in `tools/extra-tex-files.txt` and run `./tools/add-tex-files.sh`.
 
 **Errors that point somewhere.** The TeX transcript is shown as it was written,
 with the errors pulled out of it and mapped back to the line you wrote — click
@@ -87,7 +92,8 @@ the Libraries tab. It cannot do anything that needs the outside world or a
 different engine:
 
 - no `\includegraphics`, no reading or writing files, no shell-escape;
-- no packages beyond the vendored ones (no `fontspec`, `siunitx`, `chemfig`, …);
+- no packages beyond the vendored ones (no `fontspec`, `siunitx`, `chemfig`, …),
+  though `tools/add-tex-files.sh` will add one whose files you have locally;
 - Computer Modern only — TeX sets the text, so there are no system fonts;
 - no LuaTeX-only features, which rules out `graphdrawing` and contour plots;
 - each render allocates a large WebAssembly heap, so very heavy pictures are
@@ -138,6 +144,14 @@ TikZJax has no API — it watches the page for `<script type="text/tikz">` tags
 and replaces them with SVG, reporting what TeX said through `console.log`. The
 shim at the top of `index.html` is there to catch that output; it has to run
 before the engine loads.
+
+Its SVG driver also has a bug worth knowing about: a stroked shape emitted
+inside the group the driver uses for text inherits `stroke="none"` and is
+painted with nothing — which is why a CNOT target vanishes while the box around
+a gate survives. `repaintLostPaths` in `src/tikzjax.js` puts the stroke back. It
+is safe to do because pgf emits no element at all for a path it does not paint,
+so an element that paints nothing was meant to paint something; the smoke test
+checks the repair fires on the circuit and on nothing else.
 
 ## Licensing
 

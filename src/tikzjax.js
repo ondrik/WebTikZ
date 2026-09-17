@@ -20,6 +20,10 @@ import { renderAttributes } from './document.js';
 /** TikZJax's own marker for a compile that threw. */
 const FAILURE_IMAGE = 'invalid.site';
 
+/** SVG's own defaults, for working out what a path would actually paint. */
+const INITIAL_STROKE = 'none';
+const INITIAL_FILL = 'black';
+
 /** @typedef {{ok: boolean, svg: SVGElement|null, log: string, ms: number, cached: boolean, reason?: string}} RenderResult */
 
 /**
@@ -74,7 +78,10 @@ export function createRenderer({ workbench, timeout = 90000 }) {
         const log = lines.join('\n');
         // The picture is handed over rather than shared: the caller moves it
         // into the canvas, and the next render is free to clear the workbench.
-        outcome.svg?.remove();
+        if (outcome.svg) {
+            repaintLostPaths(outcome.svg);
+            outcome.svg.remove();
+        }
 
         return {
             ok: outcome.ok,
@@ -97,6 +104,50 @@ export function createRenderer({ workbench, timeout = 90000 }) {
     }
 
     return { render, clearCache, busy: () => inFlight.size > 0 };
+}
+
+/**
+ * Put back strokes the SVG driver lost.
+ *
+ * Inside a quantikz circuit -- and anywhere else the driver ends up emitting a
+ * path within the group it uses for text -- a stroked shape inherits that
+ * group's stroke="none" and is painted with nothing at all.  That is how the
+ * target of a CNOT disappears while the box around a gate survives.
+ *
+ * Such a path is always a mistake: pgf emits no element whatsoever for a path
+ * it does not paint, so an element that paints nothing was meant to paint
+ * something.  The colour comes from the nearest ancestor that names one, which
+ * is the drawing colour in force where the shape was emitted.
+ *
+ * @param {SVGElement} svg
+ * @returns {number} how many paths had to be repaired
+ */
+export function repaintLostPaths(svg) {
+    let repaired = 0;
+
+    const walk = (node, stroke, fill, lastRealStroke) => {
+        for (const child of node.children) {
+            const ownStroke = child.getAttribute('stroke');
+            const ownFill = child.getAttribute('fill');
+            const effectiveStroke = ownStroke ?? stroke;
+            const effectiveFill = ownFill ?? fill;
+            const inherited = ownStroke && ownStroke !== 'none' ? ownStroke : lastRealStroke;
+
+            if (child.tagName === 'path' && effectiveStroke === 'none' && effectiveFill === 'none') {
+                child.setAttribute('stroke', inherited ?? '#000');
+                repaired++;
+            }
+
+            walk(child, effectiveStroke, effectiveFill, inherited);
+        }
+    };
+
+    walk(svg, svg.getAttribute('stroke') ?? INITIAL_STROKE, svg.getAttribute('fill') ?? INITIAL_FILL, null);
+
+    // Leave a record: it is the kind of thing you want to see in the console
+    // when a picture looks wrong.
+    if (repaired) svg.dataset.repaintedPaths = String(repaired);
+    return repaired;
 }
 
 /**

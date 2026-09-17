@@ -24,7 +24,10 @@ test('every example is complete enough to open', () => {
         ids.add(example.id);
         assert.ok(example.name.length > 0, `${example.id} has no name`);
         assert.ok(example.uses.length > 0, `${example.id} does not say what it shows`);
-        assert.match(example.code, /\\begin\{(tikzpicture|tikzcd)\}/, `${example.id} has no picture`);
+        // A picture is a tikzpicture, or one of the environments a package
+        // wraps around one.
+        assert.match(example.code, /\\begin\{(tikzpicture|tikzcd|quantikz)\}/,
+            `${example.id} has no picture`);
     }
 });
 

@@ -15,8 +15,14 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const texFiles = join(root, 'vendor', 'tikzjax', 'tex_files');
 
-// Packages TeX pulls in by itself; offering them would only invite confusion.
-const INTERNAL = new Set(['expl3', 'amsgen', 'pgfcalendar', 'l3backend-dvips']);
+// Packages that are here because something else needs them, not because anyone
+// would choose them; offering these would only invite confusion.  A preamble
+// can still \usepackage any of them by hand.
+const INTERNAL = new Set([
+    'expl3', 'amsgen', 'pgfcalendar', 'l3backend-dvips',
+    // loaded on quantikz's behalf
+    'mhsetup', 'trimspaces', 'xkeyval', 'xkvutils', 'keyval', 'environ', 'xargs'
+]);
 
 const files = (await readdir(texFiles)).map((f) => f.replace(/\.gz$/, ''));
 

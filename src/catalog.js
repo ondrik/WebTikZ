@@ -61,6 +61,8 @@ export const TIKZ_LIBRARIES = [
     'plothandlers',
     'plotmarks',
     'positioning',
+    'quantikz',
+    'quantikz2',
     'quotes',
     'rdf',
     'scopes',
@@ -96,11 +98,15 @@ export const TEX_PACKAGES = [
     'amssymb',
     'amstext',
     'array',
+    'calc',
     'etoolbox',
     'hf-tikz',
     'ifthen',
+    'mathtools',
     'pgfplots',
+    'quantikz',
     'tikz-3dplot',
     'tikz-cd',
-    'xparse'
+    'xparse',
+    'xstring'
 ];

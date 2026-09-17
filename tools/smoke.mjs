@@ -126,7 +126,28 @@ try {
     if (shotsAt) await page.screenshot(join(shotsAt, 'dark.png'));
     await page.evaluate(`document.getElementById('btn-theme').click()`);
 
-    // 8. The settings the toolbar offers have to take effect.
+    // 8. quantikz, and the driver repair it depends on.  The target of a CNOT
+    //    is a stroked circle, which this SVG driver paints with nothing unless
+    //    src/tikzjax.js puts the stroke back.
+    before = await renderCount();
+    await page.evaluate(`document.getElementById('btn-examples').click()`);
+    await page.evaluate(`[...document.querySelectorAll('#examplelist button')]
+        .find((b) => b.textContent.includes('Quantum circuit')).click()`);
+    state = await settled(before);
+    check('the quantikz example compiles', state.hasSvg && !state.error, state.error ?? state.status);
+
+    const circuit = await page.evaluate(`(() => {
+        const svg = document.querySelector('#stage svg');
+        const invisible = [...svg.querySelectorAll('path')].filter((p) => {
+            const s = getComputedStyle(p);
+            return s.stroke === 'none' && s.fill === 'none';
+        }).length;
+        return { repainted: Number(svg.dataset.repaintedPaths ?? 0), invisible };
+    })()`);
+    check('the CNOT target is painted', circuit.repainted > 0 && circuit.invisible === 0,
+        `${circuit.repainted} repainted, ${circuit.invisible} still invisible`);
+
+    // 9. The settings the toolbar offers have to take effect.
     // Each evaluate shares one global scope, so these stay expressions.
     await page.evaluate(`(() => {
         document.getElementById('btn-settings').click();
@@ -142,7 +163,7 @@ try {
         keys.dispatchEvent(new Event('change'));
     })()`);
 
-    // 9. Every example, if asked: this is the slow one.
+    // 10. Every example, if asked: this is the slow one.
     if (wantExamples) {
         const names = await page.evaluate(`(async () => (await import('./src/examples.js')).EXAMPLES.map((e) => e.name))()`);
         for (const name of names) {
@@ -151,7 +172,13 @@ try {
             await page.evaluate(`[...document.querySelectorAll('#examplelist button')]
                 .find((b) => b.textContent.includes(${JSON.stringify(name)})).click()`);
             const result = await settled(mark);
-            check(`example: ${name}`, result.hasSvg && !result.error, result.error ?? result.log);
+            const repainted = await page.evaluate(
+                `Number(document.querySelector('#stage svg')?.dataset.repaintedPaths ?? 0)`);
+            // Only the circuit should need the repair; anywhere else it firing
+            // would mean the rule is catching paths that were meant to be blank.
+            const expected = name === 'Quantum circuit';
+            check(`example: ${name}`, result.hasSvg && !result.error && (repainted > 0) === expected,
+                result.error ?? (repainted ? `${repainted} paths repainted` : result.log));
         }
     }
 
